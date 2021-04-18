@@ -1,9 +1,9 @@
 # rotrGRP
 
 I am a developer of resource packs for minecraft and I needed software that would simplify the packaging of packages for the required versions of the game, with the resolution I needed
-<br/><br/>
+
 And so I wrote a program that does it for me
-<br/><br/>
+
 >**I draw your attention to the fact that the program is very crude and requires a lot of improvements.
 >I am by no means a programmer and I am terribly bad at it. My field is design, but I really needed to write the software I needed**
 ### Capabilities:
@@ -15,12 +15,10 @@ In fact, everything is simple!
 2.	Throw a resource pack there in 2048x resolution
 3.	Next, run the program, write the name of your resource pack and a description that will be displayed in the game
 4.	If necessary, you can click on the settings button and write the paths to the folders, the textures in which should be resized
-<br/>
-By default this is:<br/>
-textures\block<br/>
-optifine\ctm\
-<br/>
-It is in these paths that, most often, the main textures of the resource pack are located, which need to be changed in resolution
+    >By default this is:  
+    >*textures\block\\*  
+    >*optifine\ctm\\*  
+    >It is in these paths that, most often, the main textures of the resource pack are located, which need to be changed in resolution
 ***
 Here you can find the resource pack that I am working on and that I am creating using this program:
 ## rotrBLOCKS
