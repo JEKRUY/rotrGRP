@@ -21,8 +21,8 @@ In fact, everything is simple!
     >*optifine\ctm\\*  
     >It is in these paths that, most often, the main textures of the resource pack are located, which need to be changed in resolution
 
-### Here you can find the resource pack that I am working on and that I am creating using this program:
-#### rotrBLOCKS
+#### Here you can find the resource pack that I am working on and that I am creating using this program:
+### rotrBLOCKS
 ![img](https://cdn.discordapp.com/attachments/807662811492777985/813505332079755305/vg2w6ucxcah61.png)
 Available at [CurseForge](https://www.curseforge.com/minecraft/texture-packs/rotrblocks) | Free 256x version  
 Available on [Patreon](https://www.patreon.com/rotrblocks) | Paid 2048x-512x version
