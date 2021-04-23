@@ -11,17 +11,41 @@ using System.Windows.Forms;
 using System.IO;
 using System.IO.Compression;
 using System.Threading;
+using Newtonsoft.Json.Linq;
+using Syncfusion.Windows.Forms.Tools;
 
 namespace rotrGRP
 {
-    
-        public partial class Form1 : Form
+
+    public partial class Form1 : Form
     {
         public Point mouseLocation;
-
+        string[] save;
         public Form1()
         {
             InitializeComponent();
+            if (File.Exists(".\\save"))
+            {
+                save = File.ReadAllLines(".\\save");    
+                RName.Text = save[0];
+                RDesc.Text = save[1];
+                if (save[2] == "Active")
+                {
+                    toggle16.ToggleState = ToggleButtonState.Active;
+                }
+                if (save[3] == "Active")
+                {
+                    toggle15.ToggleState = ToggleButtonState.Active;
+                }
+                if (save[4] == "Active")
+                {
+                    toggle14.ToggleState = ToggleButtonState.Active;
+                }
+                if (save[5] == "Active")
+                {
+                    toggle12.ToggleState = ToggleButtonState.Active;
+                }
+            }
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -68,24 +92,61 @@ namespace rotrGRP
         public delegate void InvokeDelegateMeta(string path, int version);
         public delegate void InvokeDelegateLog(string text);
         Form2 settingsForm;
-
-        private void button17_Click(object sender, EventArgs e)
+        Boolean Started = false;
+        Task Program;
+        void PreStart()
         {
             if (RName.Text != "")
             {
-                path = ".\\" + RName.Text + " ResourcePacks\\";
+                save = new string[6];
+                save[0] = RName.Text; save[1] = RDesc.Text;
+                save[2] = toggle16.ToggleState.ToString();
+                save[3] = toggle15.ToggleState.ToString();
+                save[4] = toggle14.ToggleState.ToString();
+                save[5] = toggle12.ToggleState.ToString();
+                using (StreamWriter sw = File.CreateText(".\\save"))
+                {
+                    sw.WriteLine(String.Join("\n", save));
+                }
                 Logs("Load settings");
-                settings = File.ReadAllLines(".\\settings");
-                Directory.Delete(path, true);
+                if (File.Exists(".\\settings"))
+                {
+                    settings = File.ReadAllLines(".\\settings");
+                }
+                else
+                {
+                    settings[0] = "textures\\block\\"; settings[1] = "optifine\\ctm\\";
+                    using (StreamWriter sw = File.CreateText(".\\settings"))
+                    {
+                        sw.WriteLine(String.Join("\n", settings));
+                    }
+                }
+                path = ".\\" + RName.Text + " ResourcePacks\\";
+                if (Directory.Exists(path))
+                {
+                    Directory.Delete(path, true);
+                }
                 fileBar.Value = 0;
                 versions = 0;
                 fileBar.Visible = true;
-                Task Program = new Task(() => Start());
+                Program = new Task(() => Start());
                 Program.Start();
-                //Start();
             }
         }
-
+        private void button17_Click(object sender, EventArgs e)
+        {
+            if (!Started)
+            {
+                Started = true;
+                button17.Text = "Stop";
+                PreStart();
+            }
+            else
+            {
+                Started = false;
+                Application.Restart();
+            }
+        }
         void Start()
         {
             Logs("Start..");
@@ -128,9 +189,9 @@ namespace rotrGRP
         {
             Logs("Preparing the version 1." + version);
             if (m16_2048) { GenerateT(version, 2048); }
-            if (m16_1024) {GenerateT(version, 1024); }
-            if (m16_512) {GenerateT(version, 512); }
-            if (m16_256) {GenerateT(version, 256); }
+            if (m16_1024) { GenerateT(version, 1024); }
+            if (m16_512) { GenerateT(version, 512); }
+            if (m16_256) { GenerateT(version, 256); }
         }
 
         void GenerateT(int version, int type)
@@ -153,6 +214,7 @@ namespace rotrGRP
                 Logs("Create folder");
                 Directory.CreateDirectory(tpath);
             }
+
             GenerateP(tpath, version, type);
             switch (type)
             {
@@ -173,6 +235,7 @@ namespace rotrGRP
             ZipFile.CreateFromDirectory(tpath, tpath + ".zip");
             //Directory.Delete(tpath, true);
         }
+
         void Resizing(string path, int scale)
         {
             Logs("Generation path");
@@ -203,7 +266,7 @@ namespace rotrGRP
                     bitmap.Save(Textures[i], System.Drawing.Imaging.ImageFormat.Png);
                 }
                 i++;
-            }    
+            }
         }
 
         void GenerateP(string tpath, int version, int type)
@@ -217,8 +280,89 @@ namespace rotrGRP
             Logs("Create mcmeta..");
             BeginInvoke(new InvokeDelegateMeta(Desc), path, version);
             Logs("Copying original files x" + type + " for 1.1" + version);
-            CopyFolder(dpath + "\\assets", path + "\\assets");
+            if (version == 2)
+            {
+                RenameCopy(dpath + "\\assets", path + "\\assets");
+            }
+            else
+            {
+                //CopyFolder(dpath + "\\assets", path + "\\assets");
+                RenameCopy(dpath + "\\assets", path + "\\assets");
+            }
+
             Logs("Copy done");
+        }
+        void RenameCopy(string sourceFolder, string destFolder)
+        {
+            string jsonblocks12 = File.ReadAllText("D:/ROTR/GitHub/rotrGRP/Resources/blocks.json");
+            JObject blocks12 = JObject.Parse(jsonblocks12);
+
+            if (!Directory.Exists(destFolder))
+                Directory.CreateDirectory(destFolder);
+            string[] files = Directory.GetFiles(sourceFolder);
+            foreach (string file in files)
+            {
+                string name = Path.GetFileName(file);
+                string nameex = Path.GetFileNameWithoutExtension(file);
+                string ex = name.Replace(nameex, "");
+                string dest = "";
+                //nameex = Path.GetFileName(file);
+                //name = Path.GetFileNameWithoutExtension(file);
+                // ex = nameex.Replace(nameex, name);
+                //dest = destFolder + name + ex;
+                //dest = Path.Combine(destFolder, blocks12.SelectToken(name).ToString());
+                //dest = dest + ex;
+                if (nameex.EndsWith("_n"))
+                {
+                    nameex = name.Replace("_n.png", "");
+                    try
+                    {
+                        dest = Path.Combine(destFolder, blocks12.SelectToken(nameex).ToString());
+                    }
+                    catch (Exception)
+                    {
+                        dest = Path.Combine(destFolder, nameex);
+                    }
+                    dest = Path.Combine(dest + "_n.png");
+                }
+                else
+                {
+                    if (nameex.EndsWith("_s"))
+                    {
+                        nameex = name.Replace("_s.png", "");
+                        try
+                        {
+                            dest = Path.Combine(destFolder, blocks12.SelectToken(nameex).ToString());
+                        }
+                        catch (Exception)
+                        {
+                            dest = Path.Combine(destFolder, nameex);
+                        }
+                        dest = Path.Combine(dest + "_s.png");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            dest = Path.Combine(destFolder, blocks12.SelectToken(nameex).ToString());
+                        }
+                        catch (Exception)
+                        {
+                            dest = Path.Combine(destFolder, nameex);
+                        }
+                        dest = Path.Combine(dest + ex);
+                    }
+                }
+                File.Copy(file, dest);
+                Logs("Copying " + Path.GetFileName(file));
+            }
+            string[] folders = Directory.GetDirectories(sourceFolder);
+            foreach (string folder in folders)
+            {
+                string name = Path.GetFileName(folder);
+                string dest = Path.Combine(destFolder, name);
+                RenameCopy(folder, dest);
+            }
         }
         void CopyFolder(string sourceFolder, string destFolder)
         {
@@ -257,10 +401,17 @@ namespace rotrGRP
         {
             using (StreamWriter sw = File.CreateText(path + "\\pack.mcmeta"))
             {
-                sw.WriteLine("{\n\t\"pack\": {\n\t\t\"pack_format\": " + version + ",\n\t\t\"description\": \"" + RDesc.Text + "\"\n\t}\n}");
+                if (version==2)
+                {
+                    sw.WriteLine("{\n\t\"pack\": {\n\t\t\"pack_format\": " + (version+1) + ",\n\t\t\"description\": \"" + RDesc.Text + "\"\n\t}\n}");
+                }
+                else
+                {
+                    sw.WriteLine("{\n\t\"pack\": {\n\t\t\"pack_format\": " + version + ",\n\t\t\"description\": \"" + RDesc.Text + "\"\n\t}\n}");
+                }
+                
             }
         }
-
         private void button18_Click(object sender, EventArgs e)
         {
            if (settingsForm == null)
@@ -280,60 +431,101 @@ namespace rotrGRP
                 }
             }
         }
-
+        void ChangeBC(int type, Color color)
+        {
+            switch (type)
+            {
+                case 2048:
+                    button4.ForeColor = color;
+                    break;
+                case 1024:
+                    button3.ForeColor = color;
+                    break;
+                case 512:
+                    button2.ForeColor = color;
+                    break;
+                case 256:
+                    button1.ForeColor = color;
+                    break;
+            }
+        }
+        //2048
         private void button4_Click(object sender, EventArgs e)
         {
             if (m16_2048)
             {
                 m16_2048 = false;
-                button4.ForeColor = Color.DimGray;
+                ChangeBC(2048, Color.DimGray);
             }
             else
             {
                 m16_2048 = true;
-                button4.ForeColor = Color.Gainsboro;
+                ChangeBC(2048, Color.Gainsboro);
             }
         }
+        //1024
 
         private void button3_Click(object sender, EventArgs e)
         {
             if (m16_1024)
             {
                 m16_1024 = false;
-                button3.ForeColor = Color.DimGray;
+                ChangeBC(1024, Color.DimGray);
             }
             else
             {
                 m16_1024 = true;
-                button3.ForeColor = Color.Gainsboro;
+                ChangeBC(1024, Color.Gainsboro);
             }
         }
-
+        //512
         private void button2_Click(object sender, EventArgs e)
         {
             if (m16_512)
             {
                 m16_512 = false;
-                button2.ForeColor = Color.DimGray;
+                ChangeBC(512, Color.DimGray);
             }
             else
             {
                 m16_512 = true;
-                button2.ForeColor = Color.Gainsboro;
+                ChangeBC(512, Color.Gainsboro);
             }
         }
-
+        //256
         private void button1_Click(object sender, EventArgs e)
         {
             if (m16_256)
             {
                 m16_256 = false;
-                button1.ForeColor = Color.DimGray;
+                ChangeBC(256, Color.DimGray);
             }
             else
             {
                 m16_256 = true;
-                button1.ForeColor = Color.Gainsboro;
+                ChangeBC(256, Color.Gainsboro);
+            }
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            if (RName.Text != "")
+            {
+                path = ".\\" + RName.Text + " ResourcePacks\\";
+                if (Directory.Exists(path))
+                {
+                    Logs("Open " + path);
+                    System.Diagnostics.Process.Start(path);
+
+                }
+                else
+                {
+                    Logs("The folder is empty, start generation");
+                }
+            }
+            else
+            {
+                Logs("Name field is empty");
             }
         }
     }
